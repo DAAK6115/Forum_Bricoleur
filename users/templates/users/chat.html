@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Chat avec {{ recipient.username }}</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin-top: 40px;
+        }
+        .chat-box {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .text-right p {
+            background: #007bff;
+            color: #fff;
+        }
+        .text-left p {
+            background: #f8f9fa;
+            color: #343a40;
+        }
+        .form-group textarea {
+            border-radius: 10px;
+            resize: none;
+        }
+        #chat-message-submit {
+            border-radius: 10px;
+            background-color: #28a745;
+            transition: background-color 0.3s ease-in-out;
+        }
+        #chat-message-submit:hover {
+            background-color: #218838;
+        }
+        hr {
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    {% include 'users/navbar.html' %}
+
+    <div class="container">
+        <h3 class="text-center text-primary"><i class="fas fa-comments"></i> Chat avec {{ recipient.username }}</h3>
+    
+        <div id="chat-box" class="chat-box border p-3 mb-4" style="height: 400px; overflow-y: scroll;">
+            {% for message in messages %}
+                {% if message.sender == user %}
+                    <div class="text-right">
+                        <p class="d-inline-block p-3 rounded shadow-sm">{{ message.content }}</p>
+                        <small class="text-muted d-block">{{ message.timestamp }}</small>
+                    </div>
+                {% else %}
+                    <div class="text-left">
+                        <p class="d-inline-block p-3 rounded shadow-sm">{{ message.content }}</p>
+                        <small class="text-muted d-block">{{ message.timestamp }}</small>
+                    </div>
+                {% endif %}
+                <hr>
+            {% endfor %}
+        </div>
+    
+        <form id="chat-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <textarea id="chat-message-input" name="message" rows="3" class="form-control mb-3" placeholder="Écrivez votre message ici..." required></textarea>
+            </div>
+            <button type="submit" id="chat-message-submit" class="btn btn-primary btn-block"><i class="fas fa-paper-plane"></i> Envoyer</button>
+        </form>
+    </div>
+    
+    <script>
+        var roomName = "{{ recipient.username }}";
+        var chatSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
+        );
+    
+        chatSocket.onopen = function(e) {
+            console.log('WebSocket connected');
+        };
+    
+        chatSocket.onerror = function(e) {
+            console.error('WebSocket error:', e);
+        };
+    
+        chatSocket.onclose = function(e) {
+            console.error('WebSocket closed unexpectedly');
+        };
+    
+        chatSocket.onmessage = function(e) {
+            var data = JSON.parse(e.data);
+            var message = data['message'];
+            var sender = data['sender'];
+    
+            var chatBox = document.getElementById('chat-box');
+            var newMessage = document.createElement('div');
+    
+            if (sender === '{{ user.username }}') {
+                newMessage.className = 'text-right';
+                newMessage.innerHTML = `
+                    <p class="bg-primary text-white d-inline-block p-3 rounded shadow-sm">${message}</p>
+                    <small class="text-muted d-block">Maintenant</small>
+                    <hr>
+                `;
+            } else {
+                newMessage.className = 'text-left';
+                newMessage.innerHTML = `
+                    <p class="bg-light d-inline-block p-3 rounded shadow-sm">${message}</p>
+                    <small class="text-muted d-block">${sender}</small>
+                    <hr>
+                `;
+            }
+    
+            chatBox.appendChild(newMessage);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+    
+        document.querySelector('#chat-form').onsubmit = function(e) {
+            e.preventDefault();
+    
+            var messageInputDom = document.querySelector('#chat-message-input');
+            var message = messageInputDom.value.trim();
+    
+            if (message !== "") {
+                chatSocket.send(JSON.stringify({
+                    'message': message
+                }));
+    
+                messageInputDom.value = '';
+            } else {
+                alert('Veuillez écrire un message avant d\'envoyer.');
+            }
+        };
+    </script>            
+</body>
+</html>

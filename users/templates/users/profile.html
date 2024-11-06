@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profil - {{ user_profile.username }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #d7f0ff, #ffffff);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .profile-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #007bff;
+            font-weight: bold;
+        }
+        .follow-button {
+            margin-top: 10px;
+        }
+        .card {
+            border-radius: 15px;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background: #007bff;
+            color: #fff;
+            font-weight: bold;
+        }
+        .card-body img {
+            border-radius: 10px;
+        }
+        .btn {
+            transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            box-shadow: 0 4px 8px rgba(108, 117, 125, 0.4);
+        }
+    </style>
+</head>
+<body>
+    {% include 'users/navbar.html' %}
+    <div class="container mt-5">
+        <div class="profile-card">
+            <div class="profile-header">
+                <div>
+                    <h2>{{ user_profile.username }}</h2>
+                    <p class="text-muted">Membre depuis le {{ user_profile.date_joined }}</p>
+                    <p class="mb-0">Abonnés : <span id="followers-count">{{ followers_count }}</span> | Abonnements : {{ following_count }}</p>
+
+                    {% if user.is_authenticated and user != user_profile %}
+                        <form id="follow-form" method="POST" class="follow-button">
+                            {% csrf_token %}
+                            <button id="follow-button" class="btn {% if is_following %}btn-danger{% else %}btn-primary{% endif %}">
+                                <i class="fas {% if is_following %}fa-user-minus{% else %}fa-user-plus{% endif %}"></i>
+                                {% if is_following %} Se désabonner {% else %} S'abonner {% endif %}
+                            </button>
+                        </form>
+                        <a href="{% url 'users:chat' user_profile.username %}" class="btn btn-secondary mt-3"><i class="fas fa-paper-plane"></i> Envoyer un message</a>
+                    {% else %}
+                        <a href="{% url 'users:inbox' %}" class="btn btn-info mt-3"><i class="fas fa-envelope"></i> Voir mes messages</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <h3 class="mt-5 text-center" style="color: #007bff;"><i class="fas fa-camera-retro"></i> Publications de {{ user_profile.username }}</h3>
+        <div class="row">
+            {% for post in posts %}
+                <div class="col-md-6">
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            Par {{ post.author.username }} le {{ post.created_at }}
+                        </div>
+                        <div class="card-body">
+                            {% if post.image %}
+                                <img src="{{ post.image.url }}" class="img-fluid mb-3" alt="Image de la publication">
+                            {% endif %}
+                            <p>{{ post.caption }}</p>
+                            <a href="{% url 'posts:post_detail' post.pk %}" class="btn btn-primary"><i class="fas fa-info-circle"></i> Voir les détails</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#follow-form').on('submit', function(e) {
+                e.preventDefault();
+                var button = $('#follow-button');
+                $.ajax({
+                    url: '{% url "users:follow_toggle" %}',
+                    type: 'POST',
+                    data: {
+                        'username': '{{ user_profile.username }}',
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.status === 'ok') {
+                            if (response.following) {
+                                button.removeClass('btn-primary').addClass('btn-danger').html('<i class="fas fa-user-minus"></i> Se désabonner');
+                            } else {
+                                button.removeClass('btn-danger').addClass('btn-primary').html('<i class="fas fa-user-plus"></i> S\'abonner');
+                            }
+                            $('#followers-count').text(response.followers_count);
+                        } else {
+                            alert('Une erreur est survenue : ' + response.message);
+                        }
+                    },
+                    error: function(xhr, errmsg, err) {
+                        alert('Une erreur est survenue : ' + errmsg);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

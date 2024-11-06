@@ -1,0 +1,35 @@
+<!-- users/templates/users/notifications.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Notifications</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Notifications</h2>
+        <ul class="list-group">
+            {% for notification in notifications %}
+                <li class="list-group-item {% if not notification.is_read %}list-group-item-warning{% endif %}">
+                    {{ notification.message }}
+                    <small class="text-muted d-block">{{ notification.timestamp }}</small>
+                </li>
+            {% empty %}
+                <li class="list-group-item">Aucune notification pour le moment.</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        // WebSocket pour recevoir les notifications
+        const socket = new WebSocket('ws://' + window.location.host + '/ws/notifications/');
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            alert(data.message);
+            location.reload(); // Recharge la page pour afficher la nouvelle notification
+        };
+    </script>
+</body>
+</html>

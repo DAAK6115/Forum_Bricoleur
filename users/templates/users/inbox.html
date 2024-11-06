@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Boîte de réception</title>
+    <style>
+        body {
+            background-color: #f4f4f9;
+        }
+        .chat-sidebar {
+            max-height: 80vh;
+            overflow-y: auto;
+            background: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .chat-box {
+            max-height: 80vh;
+            overflow-y: auto;
+            background: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        #chat-log {
+            height: 60vh;
+            overflow-y: scroll;
+            border: 1px solid #e2e2e2;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+        }
+        .chat-message p {
+            border-radius: 15px;
+            padding: 10px;
+        }
+        .text-right p {
+            background: #007bff;
+            color: #ffffff;
+        }
+        .text-left p {
+            background: #e9ecef;
+            color: #333;
+        }
+        .form-control {
+            border-radius: 20px;
+        }
+        .btn-primary {
+            border-radius: 20px;
+        }
+        .list-group-item a {
+            color: #007bff;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .list-group-item a:hover {
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Sidebar avec la liste des conversations -->
+            <div class="col-md-4 chat-sidebar">
+                <h4><i class="fas fa-comments"></i> Messages</h4>
+                <ul class="list-group mt-3">
+                    {% for user in conversations %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a href="{% url 'users:chat' user.username %}">{{ user.username }}</a>
+                            <i class="fas fa-chevron-right"></i>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Zone de Chat -->
+            <div class="col-md-8 chat-box">
+                {% if recipient %}
+                    <h4 class="mb-4"><i class="fas fa-user"></i> Chat avec {{ recipient.username }}</h4>
+                    <div id="chat-log">
+                        {% for message in messages %}
+                            <div class="chat-message {% if message.sender == user %}text-right{% else %}text-left{% endif %}">
+                                <p><strong>{{ message.sender.username }}:</strong> {{ message.content }}</p>
+                                <small class="text-muted">{{ message.timestamp }}</small>
+                            </div>
+                            <hr>
+                        {% endfor %}
+                    </div>
+                    <form method="post" action="" class="mt-4">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="text" name="message" class="form-control" placeholder="Écrivez votre message..." required>
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Envoyer</button>
+                            </div>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center" style="height: 60vh;">
+                        <p class="text-muted">Sélectionnez une conversation pour commencer à discuter.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

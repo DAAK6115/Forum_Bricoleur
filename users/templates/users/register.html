@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inscription</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(to bottom, #00c6ff, #0072ff);
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            display: flex;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #28a745;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+            transition: all 0.3s ease-in-out;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.5);
+        }
+        a {
+            color: #007bff;
+            transition: color 0.3s ease-in-out;
+        }
+        a:hover {
+            color: #0056b3;
+            text-decoration: none;
+        }
+        .form-container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center"><i class="fas fa-user-plus"></i> Inscription</h2>
+        <form method="post" class="form-container">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success btn-block"><i class="fas fa-user-plus"></i> S'inscrire</button>
+        </form>
+        <div class="text-center mt-4">
+            <a href="{% url 'users:login' %}"><i class="fas fa-sign-in-alt"></i> Déjà inscrit ? Connectez-vous ici.</a>
+        </div>
+    </div>
+</body>
+</html>
+ 

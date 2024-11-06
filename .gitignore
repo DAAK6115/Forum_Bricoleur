@@ -1,0 +1,32 @@
+# Ignorer l'environnement virtuel
+venv/
+
+# Ignorer les fichiers Python compilés
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignorer les fichiers de log
+*.log
+
+# Ignorer les fichiers de base de données SQLite
+*.sqlite3
+
+# Ignorer les fichiers de configuration de IDE (par exemple, VS Code)
+.vscode/
+
+# Ignorer les fichiers de configuration de PyCharm
+.idea/
+
+# Ignorer les fichiers de tests générés
+*.coverage
+*.tox
+*.nox
+*.coverage.*
+nosetests.xml
+coverage.xml
+*.hypothesis/
+
+# Ignorer les fichiers de dépendances générés
+Pipfile.lock
+poetry.lock

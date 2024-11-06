@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Room - {{ room_name }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            margin-top: 40px;
+            max-width: 800px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        #chat-log {
+            height: 400px;
+            overflow-y: scroll;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 10px;
+        }
+        .text-right p {
+            background: #007bff;
+            color: #ffffff;
+            border-radius: 15px;
+            padding: 10px;
+        }
+        .text-left p {
+            background: #f8f9fa;
+            color: #343a40;
+            border-radius: 15px;
+            padding: 10px;
+        }
+        .input-group {
+            margin-top: 20px;
+        }
+        #chat-message-submit {
+            background-color: #28a745;
+            color: #ffffff;
+            border-radius: 15px;
+            transition: background-color 0.3s ease-in-out;
+        }
+        #chat-message-submit:hover {
+            background-color: #218838;
+        }
+        hr {
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    {% include 'users/navbar.html' %}
+
+    <div class="container">
+        <h2 class="text-center text-primary"><i class="fas fa-comments"></i> Salle de chat : {{ room_name }}</h2>
+        <div id="chat-log" class="bg-light mb-4">
+            <!-- Messages will be appended here dynamically -->
+        </div>
+        <div class="input-group">
+            <input id="chat-message-input" type="text" class="form-control" placeholder="Tapez votre message ici...">
+            <div class="input-group-append">
+                <button id="chat-message-submit" class="btn"><i class="fas fa-paper-plane"></i> Envoyer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var roomName = "{{ room_name }}";
+        var chatSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
+        );
+    
+        chatSocket.onopen = function(e) {
+            console.log('WebSocket connected');
+        };
+    
+        chatSocket.onerror = function(e) {
+            console.error('WebSocket error:', e);
+        };
+    
+        chatSocket.onclose = function(e) {
+            console.error('WebSocket closed unexpectedly');
+        };
+    
+        chatSocket.onmessage = function(e) {
+            var data = JSON.parse(e.data);
+            var message = data['message'];
+            var sender = data['sender'];
+    
+            var chatBox = document.getElementById('chat-log');
+            var newMessage = document.createElement('div');
+    
+            if (sender === '{{ user.username }}') {
+                newMessage.className = 'text-right';
+                newMessage.innerHTML = `
+                    <p class="d-inline-block p-2 rounded">${message}</p>
+                    <small class="text-muted d-block">Maintenant</small>
+                    <hr>
+                `;
+            } else {
+                newMessage.className = 'text-left';
+                newMessage.innerHTML = `
+                    <p class="d-inline-block p-2 rounded">${message}</p>
+                    <small class="text-muted d-block">${sender}</small>
+                    <hr>
+                `;
+            }
+    
+            chatBox.appendChild(newMessage);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+    
+        document.querySelector('#chat-message-submit').onclick = function(e) {
+            e.preventDefault(); // Prevent form submission
+    
+            var messageInputDom = document.querySelector('#chat-message-input');
+            var message = messageInputDom.value.trim();
+    
+            if (message !== "" && chatSocket.readyState === WebSocket.OPEN) {
+                chatSocket.send(JSON.stringify({
+                    'message': message,
+                    'sender': '{{ user.username }}' // Add sender for identification
+                }));
+    
+                messageInputDom.value = ''; // Clear input field after sending
+            } else {
+                alert('Le WebSocket n\'est pas encore connecté ou le message est vide.');
+            }
+        };
+    </script>
+    
+</body>
+</html>

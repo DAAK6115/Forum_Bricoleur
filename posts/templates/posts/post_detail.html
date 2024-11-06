@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Publication - {{ object.author.username }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #e6f7ff, #ffffff);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .card {
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .btn-warning, .btn-danger {
+            margin-right: 5px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            transition: background-color 0.3s ease-in-out;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            transition: background-color 0.3s ease-in-out;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .form-control {
+            border-radius: 5px;
+        }
+        .comment-card {
+            border-radius: 8px;
+            background-color: #f0f2f5;
+        }
+        h4, h5 {
+            color: #007bff;
+        }
+        .text-muted {
+            font-size: 0.85rem;
+        }
+        .text-center a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    {% include 'users/navbar.html' %}
+    <div class="container mt-5">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-user-circle"></i> Par {{ object.author.username }} <small class="text-muted">le {{ object.created_at }}</small>
+                </div>
+                {% if user == object.author %}
+                    <div>
+                        <a href="{% url 'posts:post_update' object.pk %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Modifier</a>
+                        <a href="{% url 'posts:post_delete' object.pk %}" class="btn btn-danger btn-sm"><i class="fas fa-trash-alt"></i> Supprimer</a>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if object.image %}
+                    <img src="{{ object.image.url }}" class="img-fluid rounded mb-3" alt="Image de la publication" style="max-height: 400px; object-fit: cover;">
+                {% endif %}
+                <p>{{ object.caption }}</p>
+
+                <div class="like-dislike-buttons">
+                    <button id="like-btn" class="btn btn-outline-success">
+                        <i class="fas fa-thumbs-up"></i> J'aime (<span id="like-count">{{ object.total_likes }}</span>)
+                    </button>
+                    <button id="dislike-btn" class="btn btn-outline-danger">
+                        <i class="fas fa-thumbs-down"></i> Je n'aime pas (<span id="dislike-count">{{ object.total_dislikes }}</span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% if user.is_authenticated and user.username != "guest" %}
+            <h4><i class="fas fa-comments"></i> Commentaires</h4>
+            <div class="mb-4">
+                {% if comments %}
+                    {% for comment in comments %}
+                        <div class="card comment-card mb-2 shadow-sm">
+                            <div class="card-body">
+                                <strong><i class="fas fa-user"></i> {{ comment.author.username }}:</strong> {{ comment.content }}
+                                <small class="text-muted d-block">{{ comment.created_at }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>Aucun commentaire pour le moment.</p>
+                {% endif %}
+            </div>
+
+            <h5><i class="fas fa-pencil-alt"></i> Ajouter un commentaire</h5>
+            <form method="post" action="{% url 'posts:add_comment' object.pk %}">
+                {% csrf_token %}
+                <textarea name="content" rows="3" class="form-control mb-3" placeholder="Votre commentaire ici..." required></textarea>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Ajouter un commentaire</button>
+            </form>
+        {% else %}
+            <p class="text-muted">Connectez-vous pour voir et ajouter des commentaires.</p>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{% url 'posts:post_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Retour aux publications</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('like-btn').addEventListener('click', function() {
+            const actionUrl = "{% url 'posts:like_post' object.pk %}";
+            const likeCountElem = document.getElementById('like-count');
+            const dislikeCountElem = document.getElementById('dislike-count');
+    
+            fetch(actionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Une erreur est survenue : ' + data.error);
+                } else {
+                    likeCountElem.textContent = data.total_likes;
+                    dislikeCountElem.textContent = data.total_dislikes;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue : ' + error.message);
+            });
+        });
+    
+        document.getElementById('dislike-btn').addEventListener('click', function() {
+            const actionUrl = "{% url 'posts:dislike_post' object.pk %}";
+            const likeCountElem = document.getElementById('like-count');
+            const dislikeCountElem = document.getElementById('dislike-count');
+    
+            fetch(actionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Une erreur est survenue : ' + data.error);
+                } else {
+                    likeCountElem.textContent = data.total_likes;
+                    dislikeCountElem.textContent = data.total_dislikes;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue : ' + error.message);
+            });
+        });
+    </script>    
+</body>
+</html>

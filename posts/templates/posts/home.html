@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Accueil - Forum pour Bricoleur</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    {% include 'users/navbar.html' %}
+    <div class="container mt-5">
+        <h1 class="text-center">Bienvenue sur le Forum pour Bricoleur !</h1>
+        <p class="text-center">Rejoignez notre communauté pour partager vos projets et idées.</p>
+        <div class="text-center">
+            <a href="{% url 'users:login' %}" class="btn btn-primary">Connexion</a>
+            <a href="{% url 'users:register' %}" class="btn btn-success">Inscription</a>
+        </div>
+    </div>
+</body>
+</html>
